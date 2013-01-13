@@ -51,23 +51,6 @@
 #define `$INSTANCE_NAME`_EOP            (0x17u)    /* End of Packet */
 
 
-/* Bootloader command responces */
-#define `$INSTANCE_NAME`_ERR_KEY       (0x01u)  /* The provided key does not match the expected value          */
-#define `$INSTANCE_NAME`_ERR_VERIFY    (0x02u)  /* The verification of flash failed                            */
-#define `$INSTANCE_NAME`_ERR_LENGTH    (0x03u)  /* The amount of data available is outside the expected range  */
-#define `$INSTANCE_NAME`_ERR_DATA      (0x04u)  /* The data is not of the proper form                          */
-#define `$INSTANCE_NAME`_ERR_CMD       (0x05u)  /* The command is not recognized                               */
-#define `$INSTANCE_NAME`_ERR_DEVICE    (0x06u)  /* The expected device does not match the detected device      */
-#define `$INSTANCE_NAME`_ERR_VERSION   (0x07u)  /* The bootloader version detected is not supported            */
-#define `$INSTANCE_NAME`_ERR_CHECKSUM  (0x08u)  /* The checksum does not match the expected value              */
-#define `$INSTANCE_NAME`_ERR_ARRAY     (0x09u)  /* The flash array is not valid                                */
-#define `$INSTANCE_NAME`_ERR_ROW       (0x0Au)  /* The flash row is not valid                                  */
-#define `$INSTANCE_NAME`_ERR_PROTECT   (0x0Bu)  /* The flash row is protected and can not be programmed        */
-#define `$INSTANCE_NAME`_ERR_APP       (0x0Cu)  /* The application is not valid and cannot be set as active    */
-#define `$INSTANCE_NAME`_ERR_ACTIVE    (0x0Du)  /* The application is currently marked as active               */
-#define `$INSTANCE_NAME`_ERR_UNK       (0x0Fu)  /* An unknown error occurred                                   */
-
-
 /* Bootloader command definitions. */
 #define `$INSTANCE_NAME`_COMMAND_CHECKSUM     (0x31u)    /* Verify the checksum for the bootloadable project   */
 #define `$INSTANCE_NAME`_COMMAND_REPORT_SIZE  (0x32u)    /* Report the programmable portions of flash          */
@@ -153,6 +136,7 @@
 #define `$INSTANCE_NAME`_FIRST_APP_BYTE             (CYDEV_FLS_ROW_SIZE * (`$INSTANCE_NAME`_BL_LAST_ROW + 1))
 #define `$INSTANCE_NAME`_SIZEOF_COMMAND_BUFFER      (300u) /* Maximum number of bytes accepted in a packet plus some */
 
+`$INSTANCE_NAME`_command_handler custom_command_handler = 0;
 
 typedef struct _`$INSTANCE_NAME`_ENTER
 {
@@ -585,6 +569,25 @@ void LaunchApp(uint32 appAddr)
         return(CYRET_SUCCESS);
 }
 
+/*******************************************************************************
+* Function Name: `$INSTANCE_NAME`_SetCustomCommandHandler
+********************************************************************************
+*
+* Summary:
+*  Sets the handler function for custom bootloader commands.
+*
+* Parameters:
+*  handler:
+*   The handler function to invoke for custom bootloader commands.
+*
+* Return:
+*  None
+*
+*******************************************************************************/
+void `$INSTANCE_NAME`_SetCustomCommandHandler(`$INSTANCE_NAME`_command_handler handler)
+{
+    custom_command_handler = handler;
+}
 
 /*******************************************************************************
 * Function Name: `$INSTANCE_NAME`_HostLink
@@ -1062,7 +1065,12 @@ void `$INSTANCE_NAME`_HostLink(uint8 timeOut) `=ReentrantKeil("`$INSTANCE_NAME`_
             *   Unsupported Command
             ***************************************************************************/
             default:
-                ackCode = `$INSTANCE_NAME`_ERR_CMD;
+                if(custom_command_handler != 0)
+                {
+                    ackCode = custom_command_handler(packetBuffer[`$INSTANCE_NAME`_CMD_ADDR], &packetBuffer[`$INSTANCE_NAME`_DATA_ADDR], pktSize, &rspSize);
+                } else {
+                    ackCode = `$INSTANCE_NAME`_ERR_CMD;
+                }
                 break;
             }
         }

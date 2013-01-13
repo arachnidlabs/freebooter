@@ -70,6 +70,23 @@
 #endif  /* (0u != `$INSTANCE_NAME`_DUAL_APP_BOOTLOADER) */
 
 
+/* Bootloader command responces */
+#define `$INSTANCE_NAME`_ERR_KEY       (0x01u)  /* The provided key does not match the expected value          */
+#define `$INSTANCE_NAME`_ERR_VERIFY    (0x02u)  /* The verification of flash failed                            */
+#define `$INSTANCE_NAME`_ERR_LENGTH    (0x03u)  /* The amount of data available is outside the expected range  */
+#define `$INSTANCE_NAME`_ERR_DATA      (0x04u)  /* The data is not of the proper form                          */
+#define `$INSTANCE_NAME`_ERR_CMD       (0x05u)  /* The command is not recognized                               */
+#define `$INSTANCE_NAME`_ERR_DEVICE    (0x06u)  /* The expected device does not match the detected device      */
+#define `$INSTANCE_NAME`_ERR_VERSION   (0x07u)  /* The bootloader version detected is not supported            */
+#define `$INSTANCE_NAME`_ERR_CHECKSUM  (0x08u)  /* The checksum does not match the expected value              */
+#define `$INSTANCE_NAME`_ERR_ARRAY     (0x09u)  /* The flash array is not valid                                */
+#define `$INSTANCE_NAME`_ERR_ROW       (0x0Au)  /* The flash row is not valid                                  */
+#define `$INSTANCE_NAME`_ERR_PROTECT   (0x0Bu)  /* The flash row is protected and can not be programmed        */
+#define `$INSTANCE_NAME`_ERR_APP       (0x0Cu)  /* The application is not valid and cannot be set as active    */
+#define `$INSTANCE_NAME`_ERR_ACTIVE    (0x0Du)  /* The application is currently marked as active               */
+#define `$INSTANCE_NAME`_ERR_UNK       (0x0Fu)  /* An unknown error occurred                                   */
+
+
 /*******************************************************************************
 * A common code for the Bootloader and Bootloadable
 *******************************************************************************/
@@ -221,6 +238,7 @@ void `$INSTANCE_NAME`_SetFlashByte(uint32 address, uint8 value) `=ReentrantKeil(
 #define `$INSTANCE_NAME`_MD_PTR_APP_ID                   ((uint16 CYCODE *)       `$INSTANCE_NAME`_MD_APP_ID_ADDR)
 #define `$INSTANCE_NAME`_MD_PTR_APP_CUST_ID              ((uint32 CYCODE *)       `$INSTANCE_NAME`_MD_APP_CUST_ID_ADDR)
 
+typedef uint8 (*`$INSTANCE_NAME`_command_handler)(uint8, uint8[], uint16, uint16*);
 
 /*******************************************************************************
 * External References
@@ -228,6 +246,7 @@ void `$INSTANCE_NAME`_SetFlashByte(uint32 address, uint8 value) `=ReentrantKeil(
 extern void LaunchApp(uint32 addr);
 extern void `$INSTANCE_NAME`_Start(void) CYSMALL `=ReentrantKeil("`$INSTANCE_NAME`_Start")`;
 extern void `$INSTANCE_NAME`_LaunchApplication(void) CYSMALL `=ReentrantKeil("`$INSTANCE_NAME`_LaunchApplication")`;
+extern void `$INSTANCE_NAME`_SetCustomCommandHandler(`$INSTANCE_NAME`_command_handler);
 extern void `$INSTANCE_NAME`_HostLink(uint8 TimeOut) `=ReentrantKeil("`$INSTANCE_NAME`_HostLink")`;
 
 #if(1u == `$INSTANCE_NAME`_DUAL_APP_BOOTLOADER)
@@ -253,7 +272,6 @@ extern void `$INSTANCE_NAME`_HostLink(uint8 TimeOut) `=ReentrantKeil("`$INSTANCE
     extern cystatus CyBtldrCommRead (uint8* buffer, uint16 size, uint16* count, uint8 timeOut);
 
 #endif  /* defined(CYDEV_BOOTLOADER_IO_COMP) && (CYDEV_BOOTLOADER_IO_COMP == `$INSTANCE_NAME`_Custom_Interface) */
-
 
 #endif /* CY_BOOTLOADER_`$INSTANCE_NAME`_H */
 
